@@ -1,4 +1,4 @@
-// Five Stones Game
+// MineSweeper Game
 import java.util.Scanner;
 
 public class MineSweeper
@@ -25,22 +25,25 @@ public class MineSweeper
 
 			try {
 
-				System.out.print("(Player 1) What row would you like to place a stone?: ");
-				row = input.nextInt();
-				System.out.print("(Player 1) What column would you like to place a stone?: ");
-				col = input.nextInt();
+				do{
+					System.out.print("(Player 1) What row would you like to place a stone?: ");
+					row = input.nextInt();
+					System.out.print("(Player 1) What column would you like to place a stone?: ");
+					col = input.nextInt();
+				}while(row>SIZE && col>SIZE);
+
+
 				clearGrid(grid, hiddenGrid, col, row);
 
 				displayOverlayedGrid(hiddenGrid, grid);
+
+				if (mineLocation[row][col]){
+					System.out.println("GAME OVER: YOU LOSE");
+					displayGrid(hiddenGrid, mineLocation);
+					break;
+				}
 			} catch (Exception e) {}
 
-			if (mineLocation[row][col]){
-				System.out.println("GAME OVER: YOU LOSE");
-				displayGrid(hiddenGrid, mineLocation);
-				break;
-			}
-			
-			
 		}while(true);
 	}
 
@@ -218,6 +221,8 @@ public class MineSweeper
 
 	public static char[][] clearGrid(char[][] grid, int[][] hiddenGrid, int col, int row){
 
+		grid[row][col] = ' ';
+
 		if (hiddenGrid[row][col] == 0){
 			try {
 			grid[row+1][col+1] = ' ';
@@ -230,9 +235,6 @@ public class MineSweeper
 			}catch(Exception e){}
 			try {
 			grid[row+1][col] = ' ';
-			}catch(Exception e){}
-			try {
-			grid[row][col] = ' ';
 			}catch(Exception e){}
 			try {
 			grid[row-1][col] = ' ';
