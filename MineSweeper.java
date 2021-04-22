@@ -25,25 +25,31 @@ public class MineSweeper
 
 			try {
 
-				do{
-					System.out.print("(Player 1) What row would you like to place a stone?: ");
-					row = input.nextInt();
-					System.out.print("(Player 1) What column would you like to place a stone?: ");
-					col = input.nextInt();
-				}while(row>SIZE && col>SIZE);
 
+				System.out.print("(Player 1) What row would you like to dig up?: ");
+				row = input.nextInt();
+				System.out.print("(Player 1) What column would you like to dig up?: ");
+				col = input.nextInt();
 
-				clearGrid(grid, hiddenGrid, col, row);
+			} catch (Exception e) {
+				System.out.println("row or column doesn't exist!");
+			}
 
-				displayOverlayedGrid(hiddenGrid, grid);
+			clearGrid(grid, hiddenGrid, col, row);
 
-				if (mineLocation[row][col]){
-					System.out.println("GAME OVER: YOU LOSE");
-					displayGrid(hiddenGrid, mineLocation);
-					break;
-				}
-			} catch (Exception e) {}
+			displayOverlayedGrid(hiddenGrid, grid);
 
+			if (mineLocation[row][col]){
+				System.out.println("GAME OVER: YOU LOSE!");
+				displayGrid(hiddenGrid, mineLocation);
+				break;
+			}
+
+			if (winCondition(mineLocation, grid)) {
+				System.out.println("GAME OVER: YOU WIN!");
+				displayGrid(hiddenGrid, mineLocation);
+				break;
+			} 
 		}while(true);
 	}
 
@@ -99,7 +105,7 @@ public class MineSweeper
 		int[][] hiddenGrid = new int[SIZE][SIZE];
 		for (int i = 0; i < mineLocation.length; i++) {
 			for (int j = 0; j < mineLocation.length; j++) {
-				if (mineLocation[i][j] == true){
+				if (mineLocation[i][j]){
 					try {
 						hiddenGrid[i+1][j] += 1;
 					} catch(Exception e){
@@ -140,8 +146,6 @@ public class MineSweeper
 					}catch(Exception e){
 						// silent
 					}
-
-
 				}
 			}
 		}
@@ -174,6 +178,7 @@ public class MineSweeper
 		
 		System.out.println("  ----------------------------");
 	}
+
 	public static void displayOverlayedGrid(int[][] hiddenGrid, char[][] grid){
 		// Display the col numbers
 		System.out.print("\n   ");
@@ -220,35 +225,30 @@ public class MineSweeper
 	}
 
 	public static char[][] clearGrid(char[][] grid, int[][] hiddenGrid, int col, int row){
-
-		grid[row][col] = ' ';
-
-		if (hiddenGrid[row][col] == 0){
+		if(hiddenGrid[row][col] == 0 && grid[row][col] != ' '){
+			grid[row][col] = ' ';
 			try {
-			grid[row+1][col+1] = ' ';
-			} catch(Exception e){}
+				grid = clearGrid(grid, hiddenGrid, col, row+1);
+			} catch (Exception e) {
+				System.out.printf("Can't find Down at col %d row %d! %n", col, row+1);
+			}
 			try {
-			grid[row][col+1] = ' ';
-			}catch(Exception e){}
+				grid = clearGrid(grid, hiddenGrid, col-1, row);
+			} catch (Exception e) {
+				System.out.printf("Can't find Left at col %d row %d! %n", col-1, row);
+			}
 			try {
-			grid[row-1][col+1] = ' ';
-			}catch(Exception e){}
+				grid = clearGrid(grid, hiddenGrid, col, row-1);
+			} catch (Exception e) {
+				System.out.printf("Can't find Up at col %d row %d! %n", col, row-1);
+			}
 			try {
-			grid[row+1][col] = ' ';
-			}catch(Exception e){}
-			try {
-			grid[row-1][col] = ' ';
-			}catch(Exception e){}
-			try {
-			grid[row+1][col-1] = ' ';
-			}catch(Exception e){}
-			try {
-			grid[row][col-1] = ' ';
-			}catch(Exception e){}
-			try {
-			grid[row-1][col-1] = ' ';
-			}catch(Exception e){}
+				grid = clearGrid(grid, hiddenGrid, col+1, row);
+			} catch (Exception e) {
+				System.out.printf("Can't find Right at col %d row %d! %n", col+1, row);
+			}
 		}
+		grid[row][col] = ' ';
 
 		return grid;
 	}
@@ -282,5 +282,28 @@ public class MineSweeper
 		}
 		
 		System.out.println("  ----------------------------");
+	}
+
+	public static boolean winCondition(boolean[][] mineLocation, char[][] grid){
+		int mineCount=0;
+		int xCount=0;
+
+		for (int i = 0; i < mineLocation.length; i++) {
+			for (int j = 0; j < mineLocation[i].length; j++) {
+				if(mineLocation[i][j]){
+					mineCount++;
+				}
+			}
+		}
+
+		for (int i = 0; i < grid.length; i++) {
+			for (int j = 0; j < grid.length; j++) {
+				if (grid[i][j] == 'x') {
+					xCount++;
+				}
+			}
+		}
+
+		return (mineCount >= xCount);
 	}
 }
