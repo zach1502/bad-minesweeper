@@ -4,11 +4,18 @@ import java.util.Scanner;
 
 public class MineSweeper{	
 
-	// "Global" Variables
+	// "Global" Constants and Variables
 	public static int mineCount = 0;
 	public static final int MINELIMIT = 10;
 	public static final double MINESPAWNCHANCE = 0.10;
-	public static final int SIZE = 10;
+	public static final int SIZE = 8;
+
+	public static final String VERTICALSEPERATOR = "| ";
+	public static final String HORIZONTALSEPARATOR = "  ----------------------------";
+	public static final String SEPARATORTWOCHAR = "| ";
+	public static final String SEPARATORTHREECHAR = "|  ";
+	public static final String SEPARATORMINE = "| M";
+	public static String output;
 
 	public static void main(String[] args){
 
@@ -105,8 +112,6 @@ public class MineSweeper{
 		return mineLocation;
 	}
 
-
-
 	public static int[][] generateHiddenGrid(boolean[][] mineLocation, final int SIZE){
 
 		// hiddenGrid aka the grid with the numbers and stuff
@@ -122,47 +127,30 @@ public class MineSweeper{
 				}
 
 				// try catch = superior
-				// its either this or a shit ton of nested ifs
-				if (mineLocation[i][j]) {
-					try {
-						hiddenGrid[i+1][j] += 1;
-					} catch(Exception e){
-						// silent
+				if (mineLocation[i][j]){
+					if(i+1 < SIZE){
+					  hiddenGrid[i+1][j] += 1;
 					}
-					try {
-						hiddenGrid[i-1][j] += 1;
-					}catch(Exception e){
-						// silent
+					if(i-1 > 0){
+					  hiddenGrid[i-1][j] += 1;
 					}
-					try {
-						hiddenGrid[i+1][j+1] += 1;
-					}catch(Exception e){
-						// silent
+					if(i+1 < SIZE && j+1 < SIZE){
+					  hiddenGrid[i+1][j+1] += 1;
 					}
-					try {
-						hiddenGrid[i][j+1] += 1;
-					}catch(Exception e){
-						// silent
+					if(j+1 < SIZE){
+					  hiddenGrid[i][j+1] += 1;
 					}
-					try {
-						hiddenGrid[i-1][j+1] += 1;
-					}catch(Exception e){
-						// silent
+					if(i-1 > 0 && j+1 < SIZE){
+					  hiddenGrid[i-1][j+1] += 1;
 					}
-					try {
-						hiddenGrid[i+1][j-1] += 1;
-					}catch(Exception e){
-						// silent
+					if(i+1 < SIZE && j-1 > 0){
+					  hiddenGrid[i+1][j-1] += 1;
 					}
-					try {
-						hiddenGrid[i][j-1] += 1;
-					}catch(Exception e){
-						// silent
+					if(j-1 > 0){
+					  hiddenGrid[i][j-1] += 1;
 					}
-					try {
-						hiddenGrid[i-1][j-1] += 1;
-					}catch(Exception e){
-						// silent
+					if(i-1 > 0 && j-1 > 0){
+					  hiddenGrid[i-1][j-1] += 1;
 					}
 				}
 			}
@@ -175,29 +163,28 @@ public class MineSweeper{
 	public static void displayGrid(char[][] grid){
 		// Display the col numbers
 		System.out.print("\n   ");
-		for(int i = 0; i < grid[0].length; i++)
-			System.out.print(i + "  ");
+		for(int i = 0; i < grid[0].length; i++){
+			System.out.printf(" %d ", i);
+		}
 		System.out.println();
 		
 		for(int i = 0; i < grid.length; i++)
 		{
-			System.out.println("  ----------------------------");
+			System.out.println(HORIZONTALSEPARATOR);
 			
 			// Display the row number
 			System.out.print(i + " ");
 			
 			// Display the squares
 			for(int j = 0; j < grid[i].length; j++)
-			{
-				if(grid[i][j] != 'x')
-					System.out.print("|  ");
-				else 
-					System.out.print("| " + grid[i][j]);
+			{	
+				output = (grid[i][j] != 'x')? SEPARATORTHREECHAR: (SEPARATORTWOCHAR + grid[i][j]);
+				System.out.print(output);
 			}
-			System.out.println("|");
+			System.out.println(VERTICALSEPERATOR);
 		}
 		
-		System.out.println("  ----------------------------");
+		System.out.println(HORIZONTALSEPARATOR);
 	}
 	
 	// Overloaded method
@@ -205,93 +192,88 @@ public class MineSweeper{
 	{
 		// Display the col numbers
 		System.out.print("\n   ");
-		for(int i = 0; i < grid[0].length; i++)
-			System.out.print(i + "  ");
+		for(int i = 0; i < grid[0].length; i++){
+			System.out.printf(" %d ", i);
+		}
 		System.out.println();
 		
 		
 		for(int i = 0; i < grid.length; i++){
-			System.out.println("  ----------------------------");
+			System.out.println(HORIZONTALSEPARATOR);
 			
 			// Display the row number
 			System.out.print(i + " ");
 			
 			// Display the squares
-			for(int j = 0; j < grid[i].length; j++)
-			{
-				System.out.print("| " + grid[i][j]);
+			for(int j = 0; j < grid[i].length; j++){
+				System.out.print(SEPARATORTWOCHAR + grid[i][j]);
 			}
-			System.out.println("|");
+			System.out.println(VERTICALSEPERATOR);
 		}
 		
-		System.out.println("  ----------------------------");
+		System.out.println(HORIZONTALSEPARATOR);
 	}
 
 	// Overload
 	public static void displayGrid(int[][] grid, boolean[][] mineLocation){
 		// Display the col numbers
 		System.out.print("\n   ");
-		for(int i = 0; i < grid[0].length; i++)
-			System.out.print(i + "  ");
+		for(int i = 0; i < grid[0].length; i++){
+			System.out.printf(" %d ", i);
+		}
 		System.out.println();
 		
 		
 		for(int i = 0; i < grid.length; i++)
 		{
-			System.out.println("  ----------------------------");
+			System.out.println(HORIZONTALSEPARATOR);
 			
 			// Display the row number
 			System.out.print(i + " ");
 			
 			// Display the squares
-			for(int j = 0; j < grid[i].length; j++)
-			{
-				if (mineLocation[i][j]) {
-					System.out.print("| M");
-				}
-				else{
-					System.out.print("| " + grid[i][j]);
-				}
+			for(int j = 0; j < grid[i].length; j++){
+
+				output = (mineLocation[i][j])? (SEPARATORMINE) : (SEPARATORTWOCHAR + grid[i][j]);
+				System.out.print(output);
 			}
-			System.out.println("|");
+			System.out.println(VERTICALSEPERATOR);
 		}
 		
-		System.out.println("  ----------------------------");
+		System.out.println(HORIZONTALSEPARATOR);
 	}
 
 	public static void displayOverlayedGrid(int[][] hiddenGrid, char[][] grid){
+
 		// Display the col numbers
 		System.out.print("\n   ");
-		for(int i = 0; i < grid[0].length; i++)
-			System.out.print(i + "  ");
+		for(int i = 0; i < grid[0].length; i++){
+			System.out.printf(" %d ", i);
+		}
 		System.out.println();
 		
 		
 		for(int i = 0; i < grid.length; i++){
-			System.out.println("  ----------------------------");
+			System.out.println(HORIZONTALSEPARATOR);
 			
 			// Display the row number
 			System.out.print(i + " ");
 			
 			// Display the squares
-			for(int j = 0; j < grid[i].length; j++)
-			{
-				if (grid[i][j] == 'x') {
-					System.out.print("| " + grid[i][j]);
+			for(int j = 0; j < grid[i].length; j++){
+				if(grid[i][j] == 'x'){
+					output = (SEPARATORTWOCHAR + grid[i][j]);
 				}
 				else{
-					if (hiddenGrid[i][j] == 0) {
-						System.out.print("|  ");
-					}
-					else{
-						System.out.print("| " + hiddenGrid[i][j]);
-					}
+					output = (hiddenGrid[i][j] == 0)? (SEPARATORTHREECHAR):(SEPARATORTWOCHAR + hiddenGrid[i][j]);
 				}
+
+				System.out.print(output);
 			}
-			System.out.println("|");
+			System.out.println(VERTICALSEPERATOR);
 		}
 			
-		System.out.println("  ----------------------------");
+		System.out.println(HORIZONTALSEPARATOR);
 	}
 	
 	// fill all elements with 'x'
@@ -314,6 +296,8 @@ public class MineSweeper{
 
 		// if the hidden number is 0 
 		if(hiddenGrid[row][col] == 0){
+
+			// Prevents recursion going into an infinite loop by marking it as
 			grid[row][col] = ' ';
 
 			// recursion go brrrrr up down left and right
