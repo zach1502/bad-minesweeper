@@ -1,68 +1,183 @@
 // MineSweeper Game
 import java.util.Scanner;
 
-public class MineSweeper
-{
-	public static void main(String[] args)
-	{
+
+public class MineSweeper{	
+
+	// "Global" Variables
+	public static int mineCount = 0;
+	public static final int MINELIMIT = 10;
+	public static final double MINESPAWNCHANCE = 0.10;
+	public static final int SIZE = 10;
+
+	public static void main(String[] args){
+
+		// New scanner object
 		Scanner input = new Scanner(System.in);
 		
-		final int SIZE = 9;
+		// Many Grids
 		char[][] grid = new char[SIZE][SIZE];
 		boolean[][] mineLocation = new boolean[SIZE][SIZE];
 		int[][] hiddenGrid = new int[SIZE][SIZE];
 		
+		// Generate mines until it hits the MINELIMIT
+		while(mineCount != MINELIMIT){
+			mineLocation = generateMineLocations(mineLocation, SIZE);
+		}
 
-		mineLocation = generateMineLocations(mineLocation, SIZE);
+		// Generates the grid with the numbers underneath
 		hiddenGrid = generateHiddenGrid(mineLocation, SIZE);
-		displayGrid(hiddenGrid, mineLocation);
+
+		// the cover for the grid
 		grid = gridcover(grid);
 
+		// show the grid
+		// displayGrid(hiddenGrid, mineLocation); <-- for testing
 		displayGrid(grid);
 		
+		// Always run
 		while(true){
-			int row = 0;
-			int col = 0;
+			int row = -1;
+			int col = -1;
 
-			try {
+			// while its out of bounds
+			while((row < 0 || row >= SIZE) || (col < 0 || col >= SIZE)){
 
-
+				// get inputs
 				System.out.print("(Player 1) What row would you like to dig up?: ");
 				row = input.nextInt();
 				System.out.print("(Player 1) What column would you like to dig up?: ");
 				col = input.nextInt();
 
-			} catch (Exception e) {
-				System.out.println("row or column doesn't exist!");
+				// output this if inputs are still out of bounds
+				if ((row < 0 || row >= SIZE || col < 0 || col >= SIZE)){
+					System.out.println("row or column doesn't exist!");
+				}
 			}
 
+			// Clear the right tiles
 			clearGrid(grid, hiddenGrid, col, row, SIZE);
 
+			// Show the grid but with the number underneath shown if we uncovered it in the clearGrid method
 			displayOverlayedGrid(hiddenGrid, grid);
 
+			// If you pick the coordinates of a mine, BOOM you lose
 			if (mineLocation[row][col]){
-				System.out.println("GAME OVER: YOU LOSE!");
 				displayGrid(hiddenGrid, mineLocation);
+				System.out.println("GAME OVER: YOU LOSE!");
 				break;
 			}
 
+			// if you clear everything except the mines, you win
 			if (winCondition(mineLocation, grid)) {
-				System.out.println("GAME OVER: YOU WIN!");
 				displayGrid(hiddenGrid, mineLocation);
+				System.out.println("GAME OVER: YOU WIN!");
 				break;
 			} 
 		}
 	}
 
+	public static boolean[][] generateMineLocations(boolean[][] mineLocation, final int SIZE){
+		int randRow;
+		int randCol; 
+		boolean flag = false;
+
+		// for each element in the 2d array..
+		for (int i = 0; i < mineLocation.length; i++) {
+			for (int j = 0; j < mineLocation.length; j++) {
+
+				// try to spawn the thingy only if its currently below the limit
+				if ((Math.random() < MINESPAWNCHANCE) && (mineCount < MINELIMIT)) {
+					randCol = (int)(Math.random() * SIZE - 1 ) ;
+					randRow = (int)(Math.random() * SIZE - 1) ;
+					mineCount++;
+					mineLocation[randRow][randCol] = true;
+				}
+
+				// break out of both loops if the number of mines reach the MINELIMIT
+				flag = (mineCount == MINELIMIT);
+				if (flag) break;
+			}
+
+			if (flag) break;
+		}
+	
+		return mineLocation;
+	}
+
+
+
+	public static int[][] generateHiddenGrid(boolean[][] mineLocation, final int SIZE){
+
+		// hiddenGrid aka the grid with the numbers and stuff
+		int[][] hiddenGrid = new int[SIZE][SIZE];
+
+		// fill every space
+		for (int i = 0; i < mineLocation.length; i++) {
+			for (int j = 0; j < mineLocation.length; j++) {
+
+				// skip 100% out of bounds checks
+				if (i < 0 || j < 0 || j >= SIZE || i >= SIZE) {
+					continue;
+				}
+
+				// try catch = superior
+				// its either this or a shit ton of nested ifs
+				if (mineLocation[i][j]) {
+					try {
+						hiddenGrid[i+1][j] += 1;
+					} catch(Exception e){
+						// silent
+					}
+					try {
+						hiddenGrid[i-1][j] += 1;
+					}catch(Exception e){
+						// silent
+					}
+					try {
+						hiddenGrid[i+1][j+1] += 1;
+					}catch(Exception e){
+						// silent
+					}
+					try {
+						hiddenGrid[i][j+1] += 1;
+					}catch(Exception e){
+						// silent
+					}
+					try {
+						hiddenGrid[i-1][j+1] += 1;
+					}catch(Exception e){
+						// silent
+					}
+					try {
+						hiddenGrid[i+1][j-1] += 1;
+					}catch(Exception e){
+						// silent
+					}
+					try {
+						hiddenGrid[i][j-1] += 1;
+					}catch(Exception e){
+						// silent
+					}
+					try {
+						hiddenGrid[i-1][j-1] += 1;
+					}catch(Exception e){
+						// silent
+					}
+				}
+			}
+		}
+
+		return hiddenGrid;
+	}
+
 	// Display the grid
-	public static void displayGrid(char[][] grid)
-	{
+	public static void displayGrid(char[][] grid){
 		// Display the col numbers
 		System.out.print("\n   ");
 		for(int i = 0; i < grid[0].length; i++)
 			System.out.print(i + "  ");
 		System.out.println();
-		
 		
 		for(int i = 0; i < grid.length; i++)
 		{
@@ -84,112 +199,8 @@ public class MineSweeper
 		
 		System.out.println("  ----------------------------");
 	}
-
-	public static boolean[][] generateMineLocations(boolean[][] mineLocation, final int SIZE){
-		int randRow;
-		int randCol; 
-		for (int i = 0; i < mineLocation.length; i++) {
-			for (int j = 0; j < mineLocation.length; j++) {
-				if ((Math.random() < 0.10)) {
-					randCol = (int)(Math.random() * SIZE - 1 ) ;
-					randRow = (int)(Math.random() * SIZE - 1) ;
-
-					mineLocation[randRow][randCol] = true;
-				}
-			}
-		}
-
-		return mineLocation;
-	}
-
-	public static int[][] generateHiddenGrid(boolean[][] mineLocation, final int SIZE){
-		int[][] hiddenGrid = new int[SIZE][SIZE];
-		for (int i = 0; i < mineLocation.length; i++) {
-			for (int j = 0; j < mineLocation.length; j++) {
-				if (i < 0 || j < 0) {
-					continue;
-				}
-				if(j >= SIZE || i >= SIZE){
-					continue;
-				}
-
-				if (mineLocation[i][j]){
-
-					if (j==0 && i==0){
-						hiddenGrid[i][j+1] += 1;
-						hiddenGrid[i+1][j] += 1;
-						hiddenGrid[i+1][j+1] += 1;
-					}
-
-					// top right corner
-					if (j==SIZE-1 && i==0){
-						hiddenGrid[i][j-1] += 1;
-						hiddenGrid[i+1][j] += 1;
-						hiddenGrid[i+1][j-1] += 1;
-					}
-
-					// bottom left corner
-					if (j==0 && i==SIZE-1){
-						hiddenGrid[i-1][j] += 1;
-						hiddenGrid[i][j+1] += 1;
-						hiddenGrid[i-1][j+1] += 1;
-					}
-
-					// bottom right corner
-					if (j==SIZE-1 && i==SIZE-1){
-						hiddenGrid[i-1][j-1] += 1;
-						hiddenGrid[i][j-1] += 1;
-						hiddenGrid[i-1][j] += 1;
-					}
-					else if (i == 0) {
-						hiddenGrid[i+1][j] += 1;
-						hiddenGrid[i+1][j+1] += 1;
-						hiddenGrid[i+1][j-1] += 1;
-						hiddenGrid[i][j+1] += 1;
-						hiddenGrid[i][j-1] += 1;
-					}
-
-					else if(j == 0){
-						hiddenGrid[i][j+1] += 1;
-						hiddenGrid[i+1][j+1] += 1;
-						hiddenGrid[i-1][j+1] += 1;
-						hiddenGrid[i+1][j] += 1;
-						hiddenGrid[i-1][j] += 1;
-					}
-
-					else if(i == SIZE-1){
-						hiddenGrid[i-1][j] += 1;
-						hiddenGrid[i-1][j+1] += 1;
-						hiddenGrid[i-1][j-1] += 1;
-						hiddenGrid[i][j+1] += 1;
-						hiddenGrid[i][j-1] += 1;
-					}
-
-					else if(j == SIZE -1){
-						hiddenGrid[i][j-1] += 1;
-						hiddenGrid[i+1][j-1] += 1;
-						hiddenGrid[i-1][j-1] += 1;
-						hiddenGrid[i+1][j] += 1;
-						hiddenGrid[i-1][j] += 1;
-					}
-
-					else{
-						hiddenGrid[i+1][j] += 1;
-						hiddenGrid[i-1][j] += 1;
-						hiddenGrid[i+1][j+1] += 1;
-						hiddenGrid[i][j+1] += 1;
-						hiddenGrid[i-1][j+1] += 1;
-						hiddenGrid[i+1][j-1] += 1;
-						hiddenGrid[i][j-1] += 1;
-						hiddenGrid[i-1][j-1] += 1;
-					}
-				}
-			}
-		}
-
-		return hiddenGrid;
-	}
-
+	
+	// Overloaded method
 	public static void displayGrid(int[][] grid)
 	{
 		// Display the col numbers
@@ -209,6 +220,38 @@ public class MineSweeper
 			for(int j = 0; j < grid[i].length; j++)
 			{
 				System.out.print("| " + grid[i][j]);
+			}
+			System.out.println("|");
+		}
+		
+		System.out.println("  ----------------------------");
+	}
+
+	// Overload
+	public static void displayGrid(int[][] grid, boolean[][] mineLocation){
+		// Display the col numbers
+		System.out.print("\n   ");
+		for(int i = 0; i < grid[0].length; i++)
+			System.out.print(i + "  ");
+		System.out.println();
+		
+		
+		for(int i = 0; i < grid.length; i++)
+		{
+			System.out.println("  ----------------------------");
+			
+			// Display the row number
+			System.out.print(i + " ");
+			
+			// Display the squares
+			for(int j = 0; j < grid[i].length; j++)
+			{
+				if (mineLocation[i][j]) {
+					System.out.print("| M");
+				}
+				else{
+					System.out.print("| " + grid[i][j]);
+				}
 			}
 			System.out.println("|");
 		}
@@ -251,7 +294,7 @@ public class MineSweeper
 		System.out.println("  ----------------------------");
 	}
 	
-
+	// fill all elements with 'x'
 	public static char[][] gridcover(char[][] grid){
 		for (int i = 0; i < grid.length; i++) {
 			for (int j = 0; j < grid.length; j++) {
@@ -263,73 +306,42 @@ public class MineSweeper
 
 	public static char[][] clearGrid(char[][] grid, int[][] hiddenGrid, int col, int row, final int SIZE){
 
-		// outside
-		if(row >= SIZE || col >= SIZE || row < 0 || col < 0){
-			return grid;
-		}
+		// 100% outside
+		if(row >= SIZE || col >= SIZE || row < 0 || col < 0) return grid;
 
-		// inside
-		if(hiddenGrid[row][col] == 0 && grid[row][col] != ' '){
+		// visited the element already
+		if(grid[row][col] == ' ') return grid;
+
+		// if the hidden number is 0 
+		if(hiddenGrid[row][col] == 0){
 			grid[row][col] = ' ';
+
+			// recursion go brrrrr up down left and right
 			grid = clearGrid(grid, hiddenGrid, col, row+1, SIZE);
 			grid = clearGrid(grid, hiddenGrid, col-1, row, SIZE);
 			grid = clearGrid(grid, hiddenGrid, col, row-1, SIZE);
 			grid = clearGrid(grid, hiddenGrid, col+1, row, SIZE);
 		}
 
-		// mark as visited
+		// mark as visited. Also ensures that we go 1 more beyond the edge to reveal a number
 		grid[row][col] = ' ';
 
 		return grid;
 	}
 
-	public static void displayGrid(int[][] grid, boolean[][] mineLocation){
-		// Display the col numbers
-		System.out.print("\n   ");
-		for(int i = 0; i < grid[0].length; i++)
-			System.out.print(i + "  ");
-		System.out.println();
-		
-		
-		for(int i = 0; i < grid.length; i++)
-		{
-			System.out.println("  ----------------------------");
-			
-			// Display the row number
-			System.out.print(i + " ");
-			
-			// Display the squares
-			for(int j = 0; j < grid[i].length; j++)
-			{
-				if (mineLocation[i][j]) {
-					System.out.print("| M");
-				}
-				else{
-					System.out.print("| " + grid[i][j]);
-				}
-			}
-			System.out.println("|");
-		}
-		
-		System.out.println("  ----------------------------");
-	}
-
 	public static boolean winCondition(boolean[][] mineLocation, char[][] grid){
-		int mineCount=0;
 		int xCount=0;
 
+		// counts all 'x's remaining
 		for (int i = 0; i < mineLocation.length; i++) {
 			for (int j = 0; j < mineLocation.length; j++) {
-				if(mineLocation[i][j]){
-					mineCount++;
-				}
-
 				if (grid[i][j] == 'x') {
 					xCount++;
 				}
 			}
 		}
 
-		return (mineCount >= xCount);
+		// return true if the number of 'x's is the same as the number of mines left
+		return (mineCount == xCount);
 	}
 }
