@@ -4,11 +4,11 @@ import java.util.Scanner;
 public class MineSweeper{	
 
 	// "Global" Constants and Variables
-	public static int xCount = 0;
-	public static int mineCount = 0;
-	public static int MineLimit = 10; 
-	public static final double MINESPAWNCHANCE = 0.10;
-	public static final int SIZE = 8;
+	public static final double MINESPAWNCHANCE = 0.10; // touch
+	public static final int SIZE = 10; // touch
+	public static int xCount = 0; // Don't touch
+	public static int mineCount = 0; // Don't touch
+	public static int MineLimit = 10; // touch
 
 	public static final String INSERTNEWLINE = "\n   ";
 	public static final String VERTICALSEPERATOR = "| ";
@@ -26,7 +26,7 @@ public class MineSweeper{
 		// Many Grids
 		char[][] grid = new char[SIZE][SIZE];
 		boolean[][] mineLocation = new boolean[SIZE][SIZE];
-		int[][] hiddenGrid = new int[SIZE][SIZE];
+		int[][] surroundingMinesGrid = new int[SIZE][SIZE];
 		boolean firstMove = true;
 
 		// the cover for the grid
@@ -34,14 +34,15 @@ public class MineSweeper{
 
 		// Generate mines until it hits the MineLimit
 		while(mineCount != MineLimit){
+			System.out.println("Generating more mines");
 			mineLocation = generateMineLocations(mineLocation, SIZE);
 		}
 
 		// Generates the grid with the numbers underneath
-		hiddenGrid = generateHiddenGrid(mineLocation, SIZE);
+		surroundingMinesGrid = generatesurroundingMinesGrid(mineLocation, SIZE);
 
 		// show the grid
-		// displayGrid(hiddenGrid, mineLocation); <-- for testing
+		// displayGrid(surroundingMinesGrid, mineLocation); <-- for testing
 		displayGrid(grid);
 		
 		// Always run
@@ -71,26 +72,27 @@ public class MineSweeper{
 				mineLocation = moveMine(mineLocation, row, col);
 
 				// regenerate the hidden grid
-				generateHiddenGrid(mineLocation, SIZE);
-				firstMove = false;
+				generatesurroundingMinesGrid(mineLocation, SIZE);
 			}
 
 			// Clear the right tiles
-			clearGrid(grid, hiddenGrid, col, row, SIZE);
+			firstMove = false;
+			int prevDirection = 0;
+			clearGrid(grid, surroundingMinesGrid, col, row, SIZE, prevDirection);
 
 			// Show the grid but with the number underneath shown if we uncovered it in the clearGrid method
-			displayOverlayedGrid(hiddenGrid, grid);
+			displayOverlayedGrid(surroundingMinesGrid, grid);
 
 			// If you pick the coordinates of a mine, BOOM you lose
 			if (mineLocation[row][col]){
-				displayGrid(hiddenGrid, mineLocation);
+				displayGrid(surroundingMinesGrid, mineLocation);
 				System.out.println("GAME OVER: YOU LOSE!");
 				break;
 			}
 
 			// if you clear everything except the mines, you win
 			if (winCondition(mineLocation, grid)) {
-				displayGrid(hiddenGrid, mineLocation);
+				displayGrid(surroundingMinesGrid, mineLocation);
 				System.out.println("GAME OVER: YOU WIN!");
 				break;
 			} 
@@ -128,10 +130,10 @@ public class MineSweeper{
 		return mineLocation;
 	}
 
-	public static int[][] generateHiddenGrid(boolean[][] mineLocation, final int SIZE){
+	public static int[][] generatesurroundingMinesGrid(boolean[][] mineLocation, final int SIZE){
 
-		// hiddenGrid aka the grid with the numbers and stuff
-		int[][] hiddenGrid = new int[SIZE][SIZE];
+		// surroundingMinesGrid aka the grid with the numbers and stuff
+		int[][] surroundingMinesGrid = new int[SIZE][SIZE];
 
 		// fill every space
 		for (int i = 0; i < mineLocation.length; i++) {
@@ -145,34 +147,34 @@ public class MineSweeper{
 				// try catch = superior
 				if (mineLocation[i][j]){
 					if(i+1 < SIZE){
-					  hiddenGrid[i+1][j] += 1;
+					    surroundingMinesGrid[i+1][j] += 1;
 					}
 					if(i-1 > 0){
-					  hiddenGrid[i-1][j] += 1;
+						surroundingMinesGrid[i-1][j] += 1;
 					}
 					if(i+1 < SIZE && j+1 < SIZE){
-					  hiddenGrid[i+1][j+1] += 1;
+					    surroundingMinesGrid[i+1][j+1] += 1;
 					}
 					if(j+1 < SIZE){
-					  hiddenGrid[i][j+1] += 1;
+					    surroundingMinesGrid[i][j+1] += 1;
 					}
 					if(i-1 > 0 && j+1 < SIZE){
-					  hiddenGrid[i-1][j+1] += 1;
+					    surroundingMinesGrid[i-1][j+1] += 1;
 					}
 					if(i+1 < SIZE && j-1 > 0){
-					  hiddenGrid[i+1][j-1] += 1;
+					    surroundingMinesGrid[i+1][j-1] += 1;
 					}
 					if(j-1 > 0){
-					  hiddenGrid[i][j-1] += 1;
+					    surroundingMinesGrid[i][j-1] += 1;
 					}
 					if(i-1 > 0 && j-1 > 0){
-					  hiddenGrid[i-1][j-1] += 1;
+					    surroundingMinesGrid[i-1][j-1] += 1;
 					}
 				}
 			}
 		}
 
-		return hiddenGrid;
+		return surroundingMinesGrid;
 	}
 
 	public static boolean[][] moveMine(boolean[][] mineLocation, int row, int col){
@@ -197,7 +199,7 @@ public class MineSweeper{
 		return mineLocation;
 	}
 
-	public static char[][] clearGrid(char[][] grid, int[][] hiddenGrid, int col, int row, final int SIZE){
+	public static char[][] clearGrid(char[][] grid, int[][] surroundingMinesGrid, int col, int row, final int SIZE, int prevDirection){
 
 		// 100% outside
 		if(row >= SIZE || col >= SIZE || row < 0 || col < 0) return grid;
@@ -205,21 +207,37 @@ public class MineSweeper{
 		// visited the element already
 		if(grid[row][col] == ' ') return grid;
 
-		// if the hidden number is 0 
-		if(hiddenGrid[row][col] == 0){
-
-			// Prevents recursion going into an infinite loop by marking it as
-			grid[row][col] = ' ';
-
-			// recursion go brrrrr up down left and right
-			grid = clearGrid(grid, hiddenGrid, col, row+1, SIZE);
-			grid = clearGrid(grid, hiddenGrid, col-1, row, SIZE);
-			grid = clearGrid(grid, hiddenGrid, col, row-1, SIZE);
-			grid = clearGrid(grid, hiddenGrid, col+1, row, SIZE);
-		}
-
-		// mark as visited. Also ensures that we go 1 more beyond the edge to reveal a number
+		// Prevents recursion going into an infinite loop by marking it as
 		grid[row][col] = ' ';
+
+		// if the hidden number is 0 
+		if(surroundingMinesGrid[row][col] == 0){
+
+			// Key: 0 -> up, 1 --> right, 2 --> down, 3 --> left
+			// recursion go brrrrr (Down)
+			if (prevDirection != 0){
+				prevDirection = 2;
+				grid = clearGrid(grid, surroundingMinesGrid, col, row+1, SIZE, prevDirection);
+			}
+
+			// left
+			if (prevDirection != 1){
+				prevDirection = 3;
+				grid = clearGrid(grid, surroundingMinesGrid, col-1, row, SIZE, prevDirection);
+			}
+
+			// up
+			if (prevDirection != 2){
+				prevDirection = 0;
+				grid = clearGrid(grid, surroundingMinesGrid, col, row-1, SIZE, prevDirection);
+			}
+
+			// right
+			if (prevDirection != 3){
+				prevDirection = 1;
+				grid = clearGrid(grid, surroundingMinesGrid, col+1, row, SIZE, prevDirection);
+			}
+		}
 
 		return grid;
 	}
@@ -259,8 +277,7 @@ public class MineSweeper{
 		}
 		System.out.println();
 		
-		for(int i = 0; i < grid.length; i++)
-		{
+		for(int i = 0; i < grid.length; i++){
 			System.out.println(HORIZONTALSEPARATOR);
 			
 			// Display the row number
@@ -279,8 +296,8 @@ public class MineSweeper{
 	}
 	
 	// Overloaded method
-	public static void displayGrid(int[][] grid)
-	{
+	public static void displayGrid(int[][] grid){
+
 		// Display the col numbers
 		System.out.print(INSERTNEWLINE);
 		for(int i = 0; i < grid[0].length; i++){
@@ -315,8 +332,7 @@ public class MineSweeper{
 		System.out.println();
 		
 		
-		for(int i = 0; i < grid.length; i++)
-		{
+		for(int i = 0; i < grid.length; i++){
 			System.out.println(HORIZONTALSEPARATOR);
 			
 			// Display the row number
@@ -334,7 +350,7 @@ public class MineSweeper{
 		System.out.println(HORIZONTALSEPARATOR);
 	}
 
-	public static void displayOverlayedGrid(int[][] hiddenGrid, char[][] grid){
+	public static void displayOverlayedGrid(int[][] surroundingMinesGrid, char[][] grid){
 
 		// Display the col numbers
 		System.out.print(INSERTNEWLINE);
@@ -356,7 +372,7 @@ public class MineSweeper{
 					output = (SEPARATORTWOCHAR + grid[i][j]);
 				}
 				else{
-					output = (hiddenGrid[i][j] == 0)? (SEPARATORTHREECHAR):(SEPARATORTWOCHAR + hiddenGrid[i][j]);
+					output = (surroundingMinesGrid[i][j] == 0)? (SEPARATORTHREECHAR):(SEPARATORTWOCHAR + surroundingMinesGrid[i][j]);
 				}
 
 				System.out.print(output);
