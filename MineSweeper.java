@@ -5,10 +5,10 @@ public class MineSweeper{
 
 	// "Global" Constants and Variables
 	public static final double MINESPAWNCHANCE = 0.10; // touch
-	public static final int SIZE = 10; // touch
+	public static final int SIZE = 78; // touch
 	public static int xCount = 0; // Don't touch
 	public static int mineCount = 0; // Don't touch
-	public static int MineLimit = 10; // touch
+	public static int MineLimit = 1; // touch
 
 	public static final String INSERTNEWLINE = "\n   ";
 	public static final String VERTICALSEPERATOR = "| ";
@@ -26,7 +26,6 @@ public class MineSweeper{
 		// Many Grids
 		char[][] grid = new char[SIZE][SIZE];
 		boolean[][] mineLocation = new boolean[SIZE][SIZE];
-		int[][] surroundingMinesGrid = new int[SIZE][SIZE];
 		boolean firstMove = true;
 
 		// the cover for the grid
@@ -39,7 +38,7 @@ public class MineSweeper{
 		}
 
 		// Generates the grid with the numbers underneath
-		surroundingMinesGrid = generatesurroundingMinesGrid(mineLocation, SIZE);
+		int[][] surroundingMinesGrid = generatesurroundingMinesGrid(mineLocation, SIZE);
 
 		// show the grid
 		// displayGrid(surroundingMinesGrid, mineLocation); <-- for testing
@@ -77,8 +76,8 @@ public class MineSweeper{
 
 			// Clear the right tiles
 			firstMove = false;
-			int prevDirection = 0;
-			clearGrid(grid, surroundingMinesGrid, col, row, SIZE, prevDirection);
+			int prevSquare = 0;
+			clearGrid(grid, surroundingMinesGrid, col, row, SIZE, prevSquare, mineLocation);
 
 			// Show the grid but with the number underneath shown if we uncovered it in the clearGrid method
 			displayOverlayedGrid(surroundingMinesGrid, grid);
@@ -97,6 +96,8 @@ public class MineSweeper{
 				break;
 			} 
 		}
+
+		input.close();
 	}
 
 	public static boolean[][] generateMineLocations(boolean[][] mineLocation, final int SIZE){
@@ -139,17 +140,12 @@ public class MineSweeper{
 		for (int i = 0; i < mineLocation.length; i++) {
 			for (int j = 0; j < mineLocation.length; j++) {
 
-				// skip 100% out of bounds checks
-				if (i < 0 || j < 0 || j >= SIZE || i >= SIZE) {
-					continue;
-				}
-
 				// try catch = superior
 				if (mineLocation[i][j]){
 					if(i+1 < SIZE){
 					    surroundingMinesGrid[i+1][j] += 1;
 					}
-					if(i-1 > 0){
+					if(i-1 >= 0){
 						surroundingMinesGrid[i-1][j] += 1;
 					}
 					if(i+1 < SIZE && j+1 < SIZE){
@@ -158,16 +154,16 @@ public class MineSweeper{
 					if(j+1 < SIZE){
 					    surroundingMinesGrid[i][j+1] += 1;
 					}
-					if(i-1 > 0 && j+1 < SIZE){
+					if(i-1 >= 0 && j+1 < SIZE){
 					    surroundingMinesGrid[i-1][j+1] += 1;
 					}
-					if(i+1 < SIZE && j-1 > 0){
+					if(i+1 < SIZE && j-1 >= 0){
 					    surroundingMinesGrid[i+1][j-1] += 1;
 					}
-					if(j-1 > 0){
+					if(j-1 >= 0){
 					    surroundingMinesGrid[i][j-1] += 1;
 					}
-					if(i-1 > 0 && j-1 > 0){
+					if(i-1 >= 0 && j-1 >= 0){
 					    surroundingMinesGrid[i-1][j-1] += 1;
 					}
 				}
@@ -199,7 +195,7 @@ public class MineSweeper{
 		return mineLocation;
 	}
 
-	public static char[][] clearGrid(char[][] grid, int[][] surroundingMinesGrid, int col, int row, final int SIZE, int prevDirection){
+	public static char[][] clearGrid(char[][] grid, int[][] surroundingMinesGrid, int col, int row, final int SIZE, int prevSquare, boolean[][] mineLocation){
 
 		// 100% outside
 		if(row >= SIZE || col >= SIZE || row < 0 || col < 0) return grid;
@@ -207,35 +203,67 @@ public class MineSweeper{
 		// visited the element already
 		if(grid[row][col] == ' ') return grid;
 
-		// Prevents recursion going into an infinite loop by marking it as
+		// Prevents recursion going into an infinite loop by marking it as visited
 		grid[row][col] = ' ';
 
 		// if the hidden number is 0 
-		if(surroundingMinesGrid[row][col] == 0){
+		if(surroundingMinesGrid[row][col] == 0 ){
 
-			// Key: 0 -> up, 1 --> right, 2 --> down, 3 --> left
+			/* C = Clicked
+			--------
+			7| 0| 1|
+			--------
+			6| C| 2|
+			--------
+			5| 4| 3|
+			-------- */
 			// recursion go brrrrr (Down)
-			if (prevDirection != 0){
-				prevDirection = 2;
-				grid = clearGrid(grid, surroundingMinesGrid, col, row+1, SIZE, prevDirection);
+			if (prevSquare != 0){
+				prevSquare = 4;
+				grid = clearGrid(grid, surroundingMinesGrid, col, row+1, SIZE, prevSquare, mineLocation);
+
 			}
 
 			// left
-			if (prevDirection != 1){
-				prevDirection = 3;
-				grid = clearGrid(grid, surroundingMinesGrid, col-1, row, SIZE, prevDirection);
-			}
-
-			// up
-			if (prevDirection != 2){
-				prevDirection = 0;
-				grid = clearGrid(grid, surroundingMinesGrid, col, row-1, SIZE, prevDirection);
+			if (prevSquare != 2){
+				prevSquare = 6;
+				grid = clearGrid(grid, surroundingMinesGrid, col-1, row, SIZE, prevSquare, mineLocation);
 			}
 
 			// right
-			if (prevDirection != 3){
-				prevDirection = 1;
-				grid = clearGrid(grid, surroundingMinesGrid, col+1, row, SIZE, prevDirection);
+			if (prevSquare != 6){
+				prevSquare = 2;
+				grid = clearGrid(grid, surroundingMinesGrid, col+1, row, SIZE, prevSquare, mineLocation);
+			}
+
+			// up
+			if (prevSquare != 4){
+				prevSquare = 0;
+				grid = clearGrid(grid, surroundingMinesGrid, col, row-1, SIZE, prevSquare, mineLocation);
+			}
+
+			// left-down
+			if (prevSquare != 1){
+				prevSquare = 5;
+				grid = clearGrid(grid, surroundingMinesGrid, col-1, row+1, SIZE, prevSquare, mineLocation);
+			}
+
+			// left-up
+			if (prevSquare != 3){
+				prevSquare = 7;
+				grid = clearGrid(grid, surroundingMinesGrid, col-1, row-1, SIZE, prevSquare, mineLocation);
+			}
+
+			// right-up
+			if (prevSquare != 5){
+				prevSquare = 1;
+				grid = clearGrid(grid, surroundingMinesGrid, col+1, row-1, SIZE, prevSquare, mineLocation);
+			}
+
+			// right-down
+			if (prevSquare != 7){
+				prevSquare = 3;
+				grid = clearGrid(grid, surroundingMinesGrid, col+1, row+1, SIZE, prevSquare, mineLocation);
 			}
 		}
 
